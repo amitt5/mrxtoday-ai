@@ -8,7 +8,7 @@ import { Badge } from "../../../components/ui/badge"
 import { supabase } from "@/lib/supabaseClient"
 import { useEffect, useState } from "react"
 // Sample project data
-const projects = [
+const demoProjects = [
   {
     id: 1,
     name: "Consumer Preferences Study 1",
@@ -84,49 +84,45 @@ const projects = [
 ]
 
 export default function ProjectsPage() {
+  const [projects, setProjects] = useState(demoProjects)
 
   useEffect(() => {
-    getProjects();
-    
-  }, []);
-
-  async function getProjects() {
-    try {
-
-        
-        // Get the current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError || !session) {
-            alert('Please sign in to get projects');
-            return;
-        }
-
+    async function fetchProjects() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session) return
 
         const response = await fetch('/api/projects', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
-            },
-        });
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        })
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to get projects');
+          throw new Error('Failed to fetch projects')
         }
 
-        const data = await response.json();
-        // setProjects(data);
-        console.log('projects111', data);
-      
-    } catch (error) {
-        console.error('Error fetching business:', error);
-        // alert('Failed to save business details. Please try again.');
+        const fetchedProjects = await response.json()
+        // Add the fetched projects at the beginning of the array
+        setProjects([
+          ...fetchedProjects.map((project: any) => ({
+            id: project.id,
+            name: project.name,
+            status: "draft", // or you can add a status field in your database
+            responses: 0, // or add these fields in your database
+            target: project.total_respondents,
+            startDate: new Date().toLocaleDateString(), // or add date fields in your database
+            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          })),
+          ...demoProjects
+        ])
+      } catch (error) {
+        console.error('Error fetching projects:', error)
+      }
     }
-  }
 
-
+    fetchProjects()
+  }, []) // Empty dependency array means this runs once on component mount
 
   return (
     <div className="flex flex-col gap-8 p-8">

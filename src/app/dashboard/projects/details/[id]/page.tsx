@@ -12,11 +12,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
-export default function NewProjectPage() {
+export default function ProjectEditDetailsPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [projectName, setProjectName] = useState("")
-  const [totalRespondents, setTotalRespondents] = useState("500")
+  const [totalRespondents, setTotalRespondents] = useState("")
   const [questionnaire, setQuestionnaire] = useState("")
   const [activeTab, setActiveTab] = useState("text")
   const router = useRouter()
@@ -52,14 +52,14 @@ export default function NewProjectPage() {
       // })
 
       // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+    //   await new Promise((resolve) => setTimeout(resolve, 2000))
 
-      toast({
-        title: "Questionnaire generated",
-        description: "Your project has been created successfully",
-      })
+    //   toast({
+    //     title: "Questionnaire generated",
+    //     description: "Your project has been created successfully",
+    //   })
 
-      router.push("/dashboard/projects")
+    //   router.push("/dashboard/projects")
     } catch (error) {
       toast({
         title: "Generation failed",
@@ -186,13 +186,13 @@ export default function NewProjectPage() {
                       <Label htmlFor="min-male-quota" className="text-sm">
                         Min Male
                       </Label>
-                      <Input id="min-male-quota" type="number" min="0" max="100" defaultValue="25" />
+                      <Input id="min-male-quota" type="number"/>
                     </div>
                     <div>
                       <Label htmlFor="max-male-quota" className="text-sm">
                         Max Male
                       </Label>
-                      <Input id="max-male-quota" type="number" min="0" max="100" defaultValue="50" />
+                      <Input id="max-male-quota" type="number"/>
                     </div>
                   </div>
                 </div>
@@ -202,13 +202,13 @@ export default function NewProjectPage() {
                       <Label htmlFor="min-female-quota" className="text-sm">
                         Min Female
                       </Label>
-                      <Input id="min-female-quota" type="number" min="0" max="100" defaultValue="25" />
+                      <Input id="min-female-quota" type="number" />
                     </div>
                     <div>
                       <Label htmlFor="max-female-quota" className="text-sm">
                         Max Female
                       </Label>
-                      <Input id="max-female-quota" type="number" min="0" max="100" defaultValue="50" />
+                      <Input id="max-female-quota" type="number" />
                     </div>
                   </div>
                 </div>
@@ -224,13 +224,13 @@ export default function NewProjectPage() {
                       <Label htmlFor="min-asu30-quota" className="text-sm">
                         Min ASU30
                       </Label>
-                      <Input id="min-asu30-quota" type="number" min="0" max="100" defaultValue="25" />
+                      <Input id="min-asu30-quota" type="number"  />
                     </div>
                     <div>
                       <Label htmlFor="max-asu30-quota" className="text-sm">
                         Max ASU30
                       </Label>
-                      <Input id="max-asu30-quota" type="number" min="0" max="100" defaultValue="50" />
+                      <Input id="max-asu30-quota" type="number"  />
                     </div>
                   </div>
                 </div>
@@ -240,13 +240,13 @@ export default function NewProjectPage() {
                       <Label htmlFor="min-aso30-quota" className="text-sm">
                         Min ASO30
                       </Label>
-                      <Input id="min-aso30-quota" type="number" min="0" max="100" defaultValue="25" />
+                      <Input id="min-aso30-quota" type="number"  />
                     </div>
                     <div>
                       <Label htmlFor="max-aso30-quota" className="text-sm">
                         Max ASO30
                       </Label>
-                      <Input id="max-aso30-quota" type="number" min="0" max="100" defaultValue="50" />
+                      <Input id="max-aso30-quota" type="number"  />
                     </div>
                   </div>
                 </div>

@@ -58,8 +58,8 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === "/dashboard/new-project"}>
-              <Link href="/dashboard/new-project">
+            <SidebarMenuButton asChild isActive={pathname === "/dashboard/projects/details/new"}>
+              <Link href="/dashboard/projects/details/new">
                 <Plus className="h-5 w-5" />
                 <span>New Project</span>
               </Link>

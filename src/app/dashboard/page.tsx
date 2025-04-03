@@ -13,7 +13,7 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">Welcome back! Here's an overview of your market research projects.</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary/90">
-          <Link href="/dashboard/projects/details/new">
+          <Link href="/dashboard/projects/draft/new">
             <Plus className="mr-2 h-4 w-4" /> New Project
           </Link>
         </Button>

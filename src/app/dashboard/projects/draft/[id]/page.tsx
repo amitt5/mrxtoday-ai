@@ -11,8 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { supabase } from "@/lib/supabaseClient"
 
-export default function ProjectEditDetailsPage() {
+export default function ProjectEditDraftPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [projectName, setProjectName] = useState("")
@@ -32,14 +33,14 @@ export default function ProjectEditDetailsPage() {
       return
     }
 
-    if (!questionnaire && activeTab === "text") {
-      toast({
-        title: "Missing questionnaire",
-        description: "Please enter your questionnaire text",
-        variant: "destructive",
-      })
-      return
-    }
+    // if (!questionnaire && activeTab === "text") {
+    //   toast({
+    //     title: "Missing questionnaire",
+    //     description: "Please enter your questionnaire text",
+    //     variant: "destructive",
+    //   })
+    //   return
+    // }
 
     setIsGenerating(true)
 
@@ -84,17 +85,42 @@ export default function ProjectEditDetailsPage() {
     setIsSaving(true)
 
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
       // In a real app, this would call an API to save the project
-      // const response = await fetch('/api/projects', {
+      const response = await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({
+          projectName,
+          totalRespondents,
+          // questionnaire: activeTab === "text" ? questionnaire : null,
+          // other project details
+        }),
+      })
+
+      // const response = await fetch('/api/businesses', {
       //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
+      //   headers: {
+      //       'Content-Type': 'application/json',
+      //       'Authorization': `Bearer ${session.access_token}`,
+      //   },
       //   body: JSON.stringify({
-      //     projectName,
-      //     totalRespondents,
-      //     questionnaire: activeTab === "text" ? questionnaire : null,
-      //     // other project details
+      //       business_name: 'businessName'.trim(),
+      //       google_place_id: 'place.place_id',
       //   }),
-      // })
+      // });
+
+      if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Failed to save project details');
+      } else {
+          alert('Project details saved successfully!');
+      }   
+
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))

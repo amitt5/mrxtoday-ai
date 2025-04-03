@@ -90,7 +90,7 @@ export default function ProjectsPage() {
           <p className="text-muted-foreground">Manage your market research projects</p>
         </div>
         <Button asChild className="bg-primary hover:bg-primary/90">
-          <Link href="/dashboard/projects/details/new">
+          <Link href="/dashboard/projects/draft/new">
             <Plus className="mr-2 h-4 w-4" /> New Project
           </Link>
         </Button>

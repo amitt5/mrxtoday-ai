@@ -1,10 +1,12 @@
+"use client"
 import Link from "next/link"
 import { CalendarIcon, Plus } from "lucide-react"
 import { Button } from "../../../components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table"
 import { Badge } from "../../../components/ui/badge"
-
+import { supabase } from "@/lib/supabaseClient"
+import { useEffect, useState } from "react"
 // Sample project data
 const projects = [
   {
@@ -82,6 +84,50 @@ const projects = [
 ]
 
 export default function ProjectsPage() {
+
+  useEffect(() => {
+    getProjects();
+    
+  }, []);
+
+  async function getProjects() {
+    try {
+
+        
+        // Get the current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError || !session) {
+            alert('Please sign in to get projects');
+            return;
+        }
+
+
+        const response = await fetch('/api/projects', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+            },
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to get projects');
+        }
+
+        const data = await response.json();
+        // setProjects(data);
+        console.log('projects111', data);
+      
+    } catch (error) {
+        console.error('Error fetching business:', error);
+        // alert('Failed to save business details. Please try again.');
+    }
+  }
+
+
+
   return (
     <div className="flex flex-col gap-8 p-8">
       <div className="flex items-center justify-between">

@@ -15,6 +15,7 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+
 export async function POST(request: Request) {
     try {
         const authHeader = request.headers.get('Authorization');
@@ -73,77 +74,47 @@ export async function POST(request: Request) {
     }
 }
 
-// export async function GET(request: Request) {
-//     try {
-    
-//         const { searchParams } = new URL(request.url);
-//         const business_id = searchParams.get("business_id");
+export async function GET(request: Request) {
+    try {
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader) {
+            return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
+        }
 
-//         if (business_id) {
-//         // Fetch a single business without authentication
-//             const { data: business, error } = await supabaseAdmin
-//                 .from("businesses")
-//                 .select("*")
-//                 .eq("id", business_id)
-//                 .single();
+        // Extract the token from the header
+        const token = authHeader.replace('Bearer ', '');
 
-//             if (error) throw error;
-//             return NextResponse.json(business);
-//         }
+        // Create a new Supabase client with the user's token
+        const supabaseWithAuth = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                global: {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            }
+        );
 
-//       // Get the authorization header from the request
-//       const authHeader = request.headers.get('Authorization');
-//       if (!authHeader) {
-//         return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
-//       }
-  
-//       // Extract the token from the header
-//       const token = authHeader.replace('Bearer ', '');
-      
-//       // Verify the token and get the user
-//       const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-      
-//       if (userError || !user) {
-//         console.error('Auth error:', userError);
-//         return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-//       }
-  
-//       const { data: businesses, error: businessesError } = await supabaseAdmin
-//       .from('businesses')
-//       .select('*')
-//       .eq('user_id', user.id);
+        // Get the user's ID
+        const { data: { user }, error: userError } = await supabaseWithAuth.auth.getUser();
+        if (userError || !user) {
+            return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        }
 
-//         if (businessesError) throw businessesError;
-//         console.log('businesses112', businesses);
-//       return NextResponse.json(businesses);
+        const { data, error } = await supabaseWithAuth
+            .from('projects')
+            .select('*')
+            .eq('user_id', user.id);
 
-//     } catch (error) {
-//       console.error('Error fetching business:', error);
-//       return NextResponse.json(
-//         { error: 'Failed to fetch business' },
-//         { status: 500 }
-//       );
-//     }
-// } 
-
-// export async function DELETE(request: Request) {
-//     try {
-//         const { id } = await request.json();
-//         const { data, error } = await supabaseAdmin
-//         .from('businesses')
-//         .delete()
-//         .eq('id', id);
-
-//         if (error) throw error;
-
-//         return NextResponse.json(data);
-        
-//     } catch (error) {
-//         console.error('Error deleting business:', error);
-//         return NextResponse.json(
-//             { error: 'Failed to delete business' },
-//             { status: 500 }
-//         );
-//     }
-// }
-
+        if (error) throw error;
+        return NextResponse.json(data);
+    } catch (error) {
+        console.error('Error fetching projects:', error);
+        return NextResponse.json(
+            { error: 'Failed to fetch projects' },
+            { status: 500 }
+        );
+    }
+}

@@ -68,23 +68,23 @@ export async function getCurrentUser() {
   return user;
 }
 
-export async function getUserProfile(userId: string) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
+// export async function getUserProfile(userId: string) {
+//   const { data, error } = await supabase
+//     .from('profiles')
+//     .select('*')
+//     .eq('id', userId)
+//     .single();
 
-  return { data, error };
-}
+//   return { data, error };
+// }
 
-export async function updateUserProfile(userId: string, data1: any) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(data1)
-    .eq('id', userId)
-    .select('*')
-    .single();
+// export async function updateUserProfile(userId: string, data1: any) {
+//   const { data, error } = await supabase
+//     .from('profiles')
+//     .update(data1)
+//     .eq('id', userId)
+//     .select('*')
+//     .single();
 
-  return { data, error };
-}
+//   return { data, error };
+// }

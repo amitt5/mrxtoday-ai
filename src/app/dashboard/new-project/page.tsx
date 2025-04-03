@@ -3,17 +3,18 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2, Upload } from "lucide-react"
-import { Button } from "../../../components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card"
-import { Input } from "../../../components/ui/input"
-import { Label } from "../../../components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../../components/ui/tabs"
-import { Textarea } from "../../../components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 
 export default function NewProjectPage() {
   const [isGenerating, setIsGenerating] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [projectName, setProjectName] = useState("")
   const [totalRespondents, setTotalRespondents] = useState("500")
   const [questionnaire, setQuestionnaire] = useState("")
@@ -67,6 +68,51 @@ export default function NewProjectPage() {
       })
     } finally {
       setIsGenerating(false)
+    }
+  }
+
+  const handleSaveProject = async () => {
+    if (!projectName) {
+      toast({
+        title: "Missing project name",
+        description: "Please enter a project name",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSaving(true)
+
+    try {
+      // In a real app, this would call an API to save the project
+      // const response = await fetch('/api/projects', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({
+      //     projectName,
+      //     totalRespondents,
+      //     questionnaire: activeTab === "text" ? questionnaire : null,
+      //     // other project details
+      //   }),
+      // })
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      toast({
+        title: "Project saved",
+        description: "Your project has been saved successfully",
+      })
+
+      router.push("/dashboard/projects")
+    } catch (error) {
+      toast({
+        title: "Save failed",
+        description: "There was an error saving your project",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -132,30 +178,77 @@ export default function NewProjectPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Gender Quota</Label>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="male-quota" className="flex-1">
-                    Male
-                  </Label>
-                  <Input id="male-quota" type="number" min="0" max="100" defaultValue="50" className="w-20" />
-                  <span className="text-sm">%</span>
+              <Label className="text-base font-medium">Gender Quota</Label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="min-male-quota" className="text-sm">
+                        Min Male
+                      </Label>
+                      <Input id="min-male-quota" type="number" min="0" max="100" defaultValue="25" />
+                    </div>
+                    <div>
+                      <Label htmlFor="max-male-quota" className="text-sm">
+                        Max Male
+                      </Label>
+                      <Input id="max-male-quota" type="number" min="0" max="100" defaultValue="50" />
+                    </div>
+                  </div>
                 </div>
-
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="female-quota" className="flex-1">
-                    Female
-                  </Label>
-                  <Input id="female-quota" type="number" min="0" max="100" defaultValue="50" className="w-20" />
-                  <span className="text-sm">%</span>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="min-female-quota" className="text-sm">
+                        Min Female
+                      </Label>
+                      <Input id="min-female-quota" type="number" min="0" max="100" defaultValue="25" />
+                    </div>
+                    <div>
+                      <Label htmlFor="max-female-quota" className="text-sm">
+                        Max Female
+                      </Label>
+                      <Input id="max-female-quota" type="number" min="0" max="100" defaultValue="50" />
+                    </div>
+                  </div>
                 </div>
+              </div>
+            </div>
 
-                <div className="flex items-center space-x-2">
-                  <Label htmlFor="other-quota" className="flex-1">
-                    Other
-                  </Label>
-                  <Input id="other-quota" type="number" min="0" max="100" defaultValue="0" className="w-20" />
-                  <span className="text-sm">%</span>
+            <div className="space-y-2">
+              <Label className="text-base font-medium">Age Quota</Label>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="min-asu30-quota" className="text-sm">
+                        Min ASU30
+                      </Label>
+                      <Input id="min-asu30-quota" type="number" min="0" max="100" defaultValue="25" />
+                    </div>
+                    <div>
+                      <Label htmlFor="max-asu30-quota" className="text-sm">
+                        Max ASU30
+                      </Label>
+                      <Input id="max-asu30-quota" type="number" min="0" max="100" defaultValue="50" />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="min-aso30-quota" className="text-sm">
+                        Min ASO30
+                      </Label>
+                      <Input id="min-aso30-quota" type="number" min="0" max="100" defaultValue="25" />
+                    </div>
+                    <div>
+                      <Label htmlFor="max-aso30-quota" className="text-sm">
+                        Max ASO30
+                      </Label>
+                      <Input id="max-aso30-quota" type="number" min="0" max="100" defaultValue="50" />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -199,7 +292,7 @@ export default function NewProjectPage() {
           <Button variant="outline" onClick={() => router.push("/dashboard")}>
             Cancel
           </Button>
-          <Button onClick={handleGenerate} disabled={isGenerating} className="bg-primary hover:bg-primary/90">
+          <Button variant="outline" onClick={handleGenerate} disabled={isGenerating || isSaving}>
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -209,9 +302,22 @@ export default function NewProjectPage() {
               "Generate Questionnaire"
             )}
           </Button>
+          <Button
+            onClick={handleSaveProject}
+            disabled={isGenerating || isSaving}
+            className="bg-primary hover:bg-primary/90"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save Project"
+            )}
+          </Button>
         </div>
       </div>
     </div>
   )
 }
-

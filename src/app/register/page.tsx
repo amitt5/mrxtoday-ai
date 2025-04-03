@@ -27,20 +27,6 @@ export default function RegisterPage() {
     setIsLoading(true)
 
     try {
-      // In a real app, this would call Supabase auth
-      // const { data, error } = await supabase.auth.signUp({
-      //   email,
-      //   password,
-      //   options: {
-      //     data: {
-      //       full_name: fullName,
-      //       company_name: companyName,
-      //     }
-      //   }
-      // })
-
-      // For demo purposes, we'll simulate a successful registration
-      // await new Promise((resolve) => setTimeout(resolve, 1000))
 
       const { data, error } = await signUpUser(email, password, fullName, companyName)
 

@@ -17,7 +17,7 @@ export default function ProjectEditDraftPage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [projectName, setProjectName] = useState("")
-  const [totalRespondents, setTotalRespondents] = useState("")
+  const [totalRespondents, setTotalRespondents] = useState("300")
   const [questionnaire, setQuestionnaire] = useState("")
   const [activeTab, setActiveTab] = useState("text")
   const router = useRouter()

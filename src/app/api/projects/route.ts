@@ -6,13 +6,13 @@ import { NextResponse } from 'next/server';
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
   throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_URL');
 }
-if (!process.env.SUPABASE_SERVICE_KEY) {
-  throw new Error('Missing env.SUPABASE_SERVICE_KEY');
+if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  throw new Error('Missing env.NEXT_PUBLIC_SUPABASE_ANON_KEY');
 }
 
-const supabaseAdmin = createClient(
+const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
 export async function POST(request: Request) {
@@ -24,29 +24,46 @@ export async function POST(request: Request) {
 
         // Extract the token from the header
         const token = authHeader.replace('Bearer ', '');
-      const { projectName, totalRespondents } = await request.json();
+        const { projectName, totalRespondents } = await request.json();
   
-      if (!projectName) {
-        return NextResponse.json(
-          { error: 'ProjectName is required' },
-          { status: 400 }
+        if (!projectName) {
+          return NextResponse.json(
+            { error: 'ProjectName is required' },
+            { status: 400 }
+          );
+        }
+
+        // Create a new Supabase client with the user's token
+        const supabaseWithAuth = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          {
+            global: {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            }
+          }
         );
-      }
-    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+
+        // Get the user's ID
+        const { data: { user }, error: userError } = await supabaseWithAuth.auth.getUser();
+        if (userError || !user) {
+          return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+        }
   
-      const { data, error } = await supabaseAdmin
-        .from('projects')
-        .insert({
-          name: projectName,
-          total_respondents: totalRespondents,
-          user_id: user?.id,
-        })
-        .select()
-        .single();
+        const { data, error } = await supabaseWithAuth
+          .from('projects')
+          .insert({
+            name: projectName,
+            total_respondents: totalRespondents,
+            user_id: user.id,
+          })
+          .select()
+          .single();
   
-      if (error) throw error;
-      console.log('data123', data);
-      return NextResponse.json(data);
+        if (error) throw error;
+        return NextResponse.json(data);
     } catch (error) {
       console.error('Error creating Project:', error);
       return NextResponse.json(
@@ -54,7 +71,7 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-  }
+}
 
 // export async function GET(request: Request) {
 //     try {

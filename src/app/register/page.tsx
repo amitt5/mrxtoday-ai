@@ -40,7 +40,7 @@ export default function RegisterPage() {
       // })
 
       // For demo purposes, we'll simulate a successful registration
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // await new Promise((resolve) => setTimeout(resolve, 1000))
 
       const { data, error } = await signUpUser(email, password, fullName, companyName)
 

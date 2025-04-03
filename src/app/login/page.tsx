@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+import { signInUser } from "@/lib/auth"
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -24,14 +25,14 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // In a real app, this would call Supabase auth
-      // const { data, error } = await supabase.auth.signInWithPassword({
-      //   email,
-      //   password,
-      // })
+      const { data, error } = await signInUser(email, password)
 
-      // For demo purposes, we'll simulate a successful login
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      if (error) {
+        throw error
+      } else {
+        console.log("User signed in:", data);
+      }
+
 
       toast({
         title: "Login successful",

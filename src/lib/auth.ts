@@ -47,48 +47,6 @@ export async function signUpUser(email: string, password: string, fullName: stri
   return { data, error };
 }
 
-async function signUpUser1(email: string, password: string, fullName: string) {
-    // Step 1: Try to sign up the user using your auth service (Supabase in this case)
-    try {
-        const { user, error } = await supabase.auth.signUp({
-            email,
-            password,
-        });
-
-        // Check if there's an error during the sign-up process
-        if (error) {
-            console.error("Error during sign-up:", error.message);
-            return { success: false, message: error.message };
-        }
-
-        // Step 2: If sign-up is successful, manually insert user data into the 'users' table
-        const { data, error: insertError } = await supabase
-            .from('users')
-            .insert([
-                {
-                    id: user.id,          // Use the user ID from the auth system
-                    email: user.email,    // Use the email from the user data
-                    full_name: fullName,  // Use the full name provided
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                }
-            ]);
-
-        // Check if there was an error while inserting user data into the 'users' table
-        if (insertError) {
-            console.error("Error inserting user into the database:", insertError.message);
-            return { success: false, message: insertError.message };
-        }
-
-        // Step 3: If everything is successful, return success
-        return { success: true, user: data[0] };
-    } catch (err) {
-        console.error("Unexpected error during sign-up:", err.message);
-        return { success: false, message: err.message };
-    }
-}
-
-
 export async function signInUser(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,

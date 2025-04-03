@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "../../components/ui/input"
 import { Label } from "../../components/ui/label"
 import { useToast } from "../../hooks/use-toast"
+import { signUpUser } from "@/lib/auth";
 
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -40,6 +41,14 @@ export default function RegisterPage() {
 
       // For demo purposes, we'll simulate a successful registration
       await new Promise((resolve) => setTimeout(resolve, 1000))
+
+      const { data, error } = await signUpUser(email, password, fullName, companyName)
+
+      if (error) {
+        throw error
+      } else {
+        console.log("User signed up:", data);
+      }
 
       toast({
         title: "Registration successful",

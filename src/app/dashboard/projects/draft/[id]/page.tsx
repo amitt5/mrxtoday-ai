@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
 import { Loader2, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,14 +14,90 @@ import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabaseClient"
 
 export default function ProjectEditDraftPage() {
+  const params = useParams()
+  const projectId = params.id
+  const router = useRouter()
+  const { toast } = useToast()
+  
+  const [isLoading, setIsLoading] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [projectName, setProjectName] = useState("")
-  const [totalRespondents, setTotalRespondents] = useState("300")
+  const [totalRespondents, setTotalRespondents] = useState("")
   const [questionnaire, setQuestionnaire] = useState("")
   const [activeTab, setActiveTab] = useState("text")
-  const router = useRouter()
-  const { toast } = useToast()
+
+  // Add states for other fields
+  const [minAge, setMinAge] = useState("18")
+  const [maxAge, setMaxAge] = useState("65")
+  const [minMaleQuota, setMinMaleQuota] = useState("")
+  const [maxMaleQuota, setMaxMaleQuota] = useState("")
+  const [minFemaleQuota, setMinFemaleQuota] = useState("")
+  const [maxFemaleQuota, setMaxFemaleQuota] = useState("")
+  const [minAsu30Quota, setMinAsu30Quota] = useState("")
+  const [maxAsu30Quota, setMaxAsu30Quota] = useState("")
+  const [minAso30Quota, setMinAso30Quota] = useState("")
+  const [maxAso30Quota, setMaxAso30Quota] = useState("")
+  const [projectType, setProjectType] = useState("consumer")
+
+  useEffect(() => {
+    async function fetchProjectDetails() {
+      if (projectId === 'new') return;
+
+      setIsLoading(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          toast({
+            title: "Authentication error",
+            description: "Please sign in to continue",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        const response = await fetch(`/api/projects/${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch project details');
+        }
+
+        const project = await response.json();
+        
+        // Populate all the fields with project data
+        setProjectName(project.name || "");
+        setTotalRespondents(project.total_respondents?.toString() || "");
+        setProjectType(project.project_type || "consumer");
+        setMinAge(project.min_age?.toString() || "18");
+        setMaxAge(project.max_age?.toString() || "65");
+        setMinMaleQuota(project.min_male_quota?.toString() || "");
+        setMaxMaleQuota(project.max_male_quota?.toString() || "");
+        setMinFemaleQuota(project.min_female_quota?.toString() || "");
+        setMaxFemaleQuota(project.max_female_quota?.toString() || "");
+        setMinAsu30Quota(project.min_asu30_quota?.toString() || "");
+        setMaxAsu30Quota(project.max_asu30_quota?.toString() || "");
+        setMinAso30Quota(project.min_aso30_quota?.toString() || "");
+        setMaxAso30Quota(project.max_aso30_quota?.toString() || "");
+        setQuestionnaire(project.questionnaire || "");
+
+      } catch (error) {
+        console.error('Error fetching project:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch project details",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchProjectDetails();
+  }, [projectId, toast]);
 
   const handleGenerate = async () => {
     if (!projectName) {
@@ -142,9 +218,19 @@ export default function ProjectEditDraftPage() {
     }
   }
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto max-w-4xl p-8">
-      <h1 className="mb-6 text-3xl font-bold">Create New Project</h1>
+      <h1 className="mb-6 text-3xl font-bold">
+        {projectId === 'new' ? 'Create New Project' : 'Edit Project'}
+      </h1>
 
       <div className="grid gap-6">
         <Card>
@@ -177,7 +263,7 @@ export default function ProjectEditDraftPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="project-type">Project Type</Label>
-                <Select defaultValue="consumer">
+                <Select value={projectType} onValueChange={setProjectType}>
                   <SelectTrigger id="project-type">
                     <SelectValue placeholder="Select project type" />
                   </SelectTrigger>

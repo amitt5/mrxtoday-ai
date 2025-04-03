@@ -124,6 +124,10 @@ export default function ProjectsPage() {
     fetchProjects()
   }, []) // Empty dependency array means this runs once on component mount
 
+  const editProject = (projectId: number) => {
+    console.log('editProject', projectId)
+  }
+
   return (
     <div className="flex flex-col gap-8 p-8">
       <div className="flex items-center justify-between">
@@ -203,7 +207,8 @@ export default function ProjectsPage() {
                     ) : (
                       <div className="flex justify-end gap-2">
                         <Button asChild variant="outline" size="sm">
-                          <Link href={`/dashboard/projects/${project.id}/edit`}>Edit</Link>
+                        {/* <Button asChild variant="outline" size="sm" onClick={() => editProject(project.id)}> */}
+                          <Link href={`/dashboard/projects/draft/${project.id}`}>Edit</Link>
                         </Button>
                         <Button asChild size="sm">
                           <Link href={`/dashboard/projects/${project.id}/launch`}>Launch</Link>

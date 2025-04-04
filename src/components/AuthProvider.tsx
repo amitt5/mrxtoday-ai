@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setUser(session?.user ?? null);
       if (!session) {
-        router.push('/auth');
+        router.push('/');
       }
     });
 

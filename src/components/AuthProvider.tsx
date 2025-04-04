@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setUser(session?.user ?? null);
       if (!session) {
+        console.log('NO SESSION — REDIRECTING TO /');
         router.push('/');
       }
     });

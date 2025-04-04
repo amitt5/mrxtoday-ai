@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabaseClient"
+// import OpenAI from "openai";
 
 export default function ProjectEditDraftPage() {
   const params = useParams()
@@ -148,6 +149,8 @@ export default function ProjectEditDraftPage() {
     }
   }
 
+  
+
   const handleSaveProject = async () => {
     if (!projectName) {
       toast({
@@ -162,61 +165,62 @@ export default function ProjectEditDraftPage() {
 
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No session found');
+      }
 
-      // In a real app, this would call an API to save the project
-      const response = await fetch('/api/projects', {
-        method: 'POST',
+      const projectData = {
+        projectName,
+        totalRespondents,
+        projectType,
+        minAge,
+        maxAge,
+        minMaleQuota,
+        maxMaleQuota,
+        minFemaleQuota,
+        maxFemaleQuota,
+        minAsu30Quota,
+        maxAsu30Quota,
+        minAso30Quota,
+        maxAso30Quota,
+        questionnaire: activeTab === "text" ? questionnaire : null,
+      };
+
+      const isNewProject = projectId === 'new';
+      const url = isNewProject ? '/api/projects' : `/api/projects/${projectId}`;
+      const method = isNewProject ? 'POST' : 'PATCH';
+
+      const response = await fetch(url, {
+        method,
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          projectName,
-          totalRespondents,
-          // questionnaire: activeTab === "text" ? questionnaire : null,
-          // other project details
-        }),
-      })
-
-      // const response = await fetch('/api/businesses', {
-      //   method: 'POST',
-      //   headers: {
-      //       'Content-Type': 'application/json',
-      //       'Authorization': `Bearer ${session.access_token}`,
-      //   },
-      //   body: JSON.stringify({
-      //       business_name: 'businessName'.trim(),
-      //       google_place_id: 'place.place_id',
-      //   }),
-      // });
+        body: JSON.stringify(projectData),
+      });
 
       if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.message || 'Failed to save project details');
-      } else {
-          alert('Project details saved successfully!');
-      }   
-
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to save project details');
+      }
 
       toast({
-        title: "Project saved",
-        description: "Your project has been saved successfully",
-      })
+        title: "Success",
+        description: `Project ${isNewProject ? 'created' : 'updated'} successfully`,
+      });
 
-      router.push("/dashboard/projects")
+      router.push("/dashboard/projects");
     } catch (error) {
+      console.error('Error saving project:', error);
       toast({
         title: "Save failed",
-        description: "There was an error saving your project",
+        description: error instanceof Error ? error.message : "There was an error saving your project",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -280,12 +284,26 @@ export default function ProjectEditDraftPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="min-age">Minimum Age</Label>
-                <Input id="min-age" type="number" min="18" max="99" defaultValue="18" />
+                <Input
+                  id="min-age"
+                  type="number"
+                  min="18"
+                  max="99"
+                  value={minAge}
+                  onChange={(e) => setMinAge(e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="max-age">Maximum Age</Label>
-                <Input id="max-age" type="number" min="18" max="99" defaultValue="65" />
+                <Input
+                  id="max-age"
+                  type="number"
+                  min="18"
+                  max="99"
+                  value={maxAge}
+                  onChange={(e) => setMaxAge(e.target.value)}
+                />
               </div>
             </div>
 
@@ -298,13 +316,23 @@ export default function ProjectEditDraftPage() {
                       <Label htmlFor="min-male-quota" className="text-sm">
                         Min Male
                       </Label>
-                      <Input id="min-male-quota" type="number"/>
+                      <Input
+                        id="min-male-quota"
+                        type="number"
+                        value={minMaleQuota}
+                        onChange={(e) => setMinMaleQuota(e.target.value)}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="max-male-quota" className="text-sm">
                         Max Male
                       </Label>
-                      <Input id="max-male-quota" type="number"/>
+                      <Input
+                        id="max-male-quota"
+                        type="number"
+                        value={maxMaleQuota}
+                        onChange={(e) => setMaxMaleQuota(e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -314,13 +342,23 @@ export default function ProjectEditDraftPage() {
                       <Label htmlFor="min-female-quota" className="text-sm">
                         Min Female
                       </Label>
-                      <Input id="min-female-quota" type="number" />
+                      <Input
+                        id="min-female-quota"
+                        type="number"
+                        value={minFemaleQuota}
+                        onChange={(e) => setMinFemaleQuota(e.target.value)}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="max-female-quota" className="text-sm">
                         Max Female
                       </Label>
-                      <Input id="max-female-quota" type="number" />
+                      <Input
+                        id="max-female-quota"
+                        type="number"
+                        value={maxFemaleQuota}
+                        onChange={(e) => setMaxFemaleQuota(e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -336,13 +374,23 @@ export default function ProjectEditDraftPage() {
                       <Label htmlFor="min-asu30-quota" className="text-sm">
                         Min ASU30
                       </Label>
-                      <Input id="min-asu30-quota" type="number"  />
+                      <Input
+                        id="min-asu30-quota"
+                        type="number"
+                        value={minAsu30Quota}
+                        onChange={(e) => setMinAsu30Quota(e.target.value)}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="max-asu30-quota" className="text-sm">
                         Max ASU30
                       </Label>
-                      <Input id="max-asu30-quota" type="number"  />
+                      <Input
+                        id="max-asu30-quota"
+                        type="number"
+                        value={maxAsu30Quota}
+                        onChange={(e) => setMaxAsu30Quota(e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -352,13 +400,23 @@ export default function ProjectEditDraftPage() {
                       <Label htmlFor="min-aso30-quota" className="text-sm">
                         Min ASO30
                       </Label>
-                      <Input id="min-aso30-quota" type="number"  />
+                      <Input
+                        id="min-aso30-quota"
+                        type="number"
+                        value={minAso30Quota}
+                        onChange={(e) => setMinAso30Quota(e.target.value)}
+                      />
                     </div>
                     <div>
                       <Label htmlFor="max-aso30-quota" className="text-sm">
                         Max ASO30
                       </Label>
-                      <Input id="max-aso30-quota" type="number"  />
+                      <Input
+                        id="max-aso30-quota"
+                        type="number"
+                        value={maxAso30Quota}
+                        onChange={(e) => setMaxAso30Quota(e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>

@@ -2,7 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BarChart3, FileText, Home, Plus, Settings, Users } from "lucide-react"
+import { BarChart3, FileText, Home, Plus, Settings, Users, LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
 import {
   Sidebar,
   SidebarContent,
@@ -22,14 +23,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu"
+import { signOutUser } from "@/lib/auth"
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
 
   // Only show sidebar on dashboard and related pages
   if (!pathname.startsWith("/dashboard")) {
     return null
   }
+
+  const handleLogout = async () => {
+    await signOutUser();
+    router.push('/');
+  };
 
   return (
     <Sidebar>
@@ -58,8 +66,8 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={pathname === "/dashboard/projects/draft/new"}>
-              <Link href="/dashboard/projects/draft/new">
+            <SidebarMenuButton asChild isActive={pathname === "/dashboard/projects/details/new"}>
+              <Link href="/dashboard/projects/details/new">
                 <Plus className="h-5 w-5" />
                 <span>New Project</span>
               </Link>
@@ -78,6 +86,14 @@ export function AppSidebar() {
               <Link href="/dashboard/settings">
                 <Settings className="h-5 w-5" />
                 <span>Settings</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={pathname === "/dashboard/settings"}>
+              <Link href="/dashboard/settings" onClick={handleLogout} >
+                <LogOut className="h-5 w-5" />
+                <span>Logout</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

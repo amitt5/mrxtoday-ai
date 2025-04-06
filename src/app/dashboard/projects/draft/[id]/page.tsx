@@ -19,13 +19,46 @@ export default function ProjectEditDraftPage() {
   const projectId = params.id
   const router = useRouter()
   const { toast } = useToast()
+
+  const questionnaire = [
+    {
+      id: 1,
+      type: "multiple_choice",
+      question: "How often do you purchase this product?",
+      options: ["Daily", "Weekly", "Monthly", "Rarely", "Never"],
+    },
+    {
+      id: 2,
+      type: "multiple_choice",
+      question: "How satisfied are you with the product taste?",
+      options: ["Very satisfied", "Satisfied", "Neutral", "Dissatisfied", "Very dissatisfied"],
+    },
+    {
+      id: 3,
+      type: "open_ended",
+      question: "What features would you like to see improved?",
+    },
+    {
+      id: 4,
+      type: "scale",
+      question: "How likely are you to recommend our product to others?",
+      min: 0,
+      max: 10,
+      minLabel: "Not at all likely",
+      maxLabel: "Extremely likely",
+    },
+    {
+      id: 5,
+      type: "open_ended",
+      question: "What other brands do you consider when purchasing this type of product?",
+    },
+  ]
   
   const [isLoading, setIsLoading] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [projectName, setProjectName] = useState("")
   const [totalRespondents, setTotalRespondents] = useState("")
-  const [questionnaire, setQuestionnaire] = useState("")
   const [activeTab, setActiveTab] = useState("text")
 
   // Add states for other fields
@@ -83,7 +116,6 @@ export default function ProjectEditDraftPage() {
         setMaxAsu30Quota(project.max_asu30_quota?.toString() || "");
         setMinAso30Quota(project.min_aso30_quota?.toString() || "");
         setMaxAso30Quota(project.max_aso30_quota?.toString() || "");
-        setQuestionnaire(project.questionnaire || "");
 
       } catch (error) {
         console.error('Error fetching project:', error);
@@ -99,6 +131,11 @@ export default function ProjectEditDraftPage() {
 
     fetchProjectDetails();
   }, [projectId, toast]);
+
+  const handleTestQuestionnaire = async () => {
+    console.log("Test questionnaire")
+    // TODO: Implement the logic to test the questionnaire
+  }
 
   const handleGenerate = async () => {
     if (!projectName) {
@@ -132,10 +169,10 @@ export default function ProjectEditDraftPage() {
       // Simulate API call
     //   await new Promise((resolve) => setTimeout(resolve, 2000))
 
-    //   toast({
-    //     title: "Questionnaire generated",
-    //     description: "Your project has been created successfully",
-    //   })
+      toast({
+        title: "Questionnaire generated",
+        description: "Your project has been created successfully",
+      })
 
     //   router.push("/dashboard/projects")
     } catch (error) {
@@ -183,7 +220,6 @@ export default function ProjectEditDraftPage() {
         maxAsu30Quota,
         minAso30Quota,
         maxAso30Quota,
-        questionnaire: activeTab === "text" ? questionnaire : null,
       };
 
       const isNewProject = projectId === 'new';
@@ -470,6 +506,16 @@ export default function ProjectEditDraftPage() {
               </>
             ) : (
               "Generate Questionnaire"
+            )}
+          </Button>
+          <Button variant="outline" onClick={handleTestQuestionnaire} disabled={isGenerating || isSaving}>
+            {isGenerating ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              "Test Questionnaire"
             )}
           </Button>
           <Button

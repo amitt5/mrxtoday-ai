@@ -2,7 +2,6 @@ import { supabase } from "./supabaseClient";
 
 export const saveUserToDB = async (user: any) => {
   const { id, email, user_metadata } = user;
-  console.log("saveUserToDB-user", user);
   // Check if user already exists
   const { data, error } = await supabase
     .from("users")
@@ -10,9 +9,7 @@ export const saveUserToDB = async (user: any) => {
     .eq("user_id", id)
     // .single();
 
-  console.log("saveUserToDB-user22", data);
   if (!data || data.length === 0) {
-    console.log("saveUserToDB-user221", data);
 
     // Insert user
     const { error: insertError } = await supabase.from("users").insert([

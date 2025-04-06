@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Badge } from "../../../components/ui/badge"
 import { supabase } from "@/lib/supabaseClient"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 // Sample project data
 const demoProjects = [
   {
@@ -85,44 +86,60 @@ const demoProjects = [
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState(demoProjects)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    async function fetchProjects() {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) return
-
-        const response = await fetch('/api/projects', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch projects')
-        }
-
-        const fetchedProjects = await response.json()
-        // Add the fetched projects at the beginning of the array
-        setProjects([
-          ...fetchedProjects.map((project: any) => ({
-            id: project.id,
-            name: project.name,
-            status: "draft", // or you can add a status field in your database
-            responses: 0, // or add these fields in your database
-            target: project.total_respondents,
-            startDate: new Date().toLocaleDateString(), // or add date fields in your database
-            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          })),
-          ...demoProjects
-        ])
-      } catch (error) {
-        console.error('Error fetching projects:', error)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", { event, session });
+      if (session) {
+        fetchProjects(session);
+      } else {
+        setIsLoading(false);
       }
-    }
+    });
 
-    fetchProjects()
-  }, []) // Empty dependency array means this runs once on component mount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function fetchProjects(session: any) {
+    try {
+      console.log("Starting fetchProjects with session:", session);
+      const response = await fetch('/api/projects', {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch projects');
+      }
+
+      const fetchedProjects = await response.json();
+      setProjects([
+        ...fetchedProjects.map((project: any) => ({
+          id: project.id,
+          name: project.name,
+          status: "draft",
+          responses: 0,
+          target: project.total_respondents,
+          startDate: new Date().toLocaleDateString(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        })),
+        ...demoProjects
+      ]);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      toast.error("Failed to fetch projects");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   const editProject = (projectId: number) => {
     console.log('editProject', projectId)

@@ -32,27 +32,30 @@ export async function GET(
     }
 
     const { data, error } = await supabaseWithAuth
-      .from('projects')
+      .from('questionnaires')
       .select('*')
-      .eq('id', projectId)
-      .eq('user_id', user.id)
+      .eq('project_id', projectId)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No questionnaire found
+        return NextResponse.json(null);
+      }
+      throw error;
+    }
+
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching project:', error);
+    console.error('Error fetching questionnaire:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch project' },
+      { error: 'Failed to fetch questionnaire' },
       { status: 500 }
     );
   }
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { projectId: string } }
-) {
+export async function POST(request: Request) {
   try {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
@@ -60,8 +63,7 @@ export async function PATCH(
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { projectId } = await params;
-    const updateData = await request.json();
+    const { projectId, questionnaireJson } = await request.json();
 
     const supabaseWithAuth = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -81,34 +83,69 @@ export async function PATCH(
     }
 
     const { data, error } = await supabaseWithAuth
-      .from('projects')
-      .update({
-        name: updateData.projectName,
-        total_respondents: updateData.totalRespondents,
-        // project_type: updateData.projectType,
-        // min_age: updateData.minAge,
-        // max_age: updateData.maxAge,
-        // min_male_quota: updateData.minMaleQuota,
-        // max_male_quota: updateData.maxMaleQuota,
-        // min_female_quota: updateData.minFemaleQuota,
-        // max_female_quota: updateData.maxFemaleQuota,
-        // min_asu30_quota: updateData.minAsu30Quota,
-        // max_asu30_quota: updateData.maxAsu30Quota,
-        // min_aso30_quota: updateData.minAso30Quota,
-        // max_aso30_quota: updateData.maxAso30Quota,
-        // questionnaire: updateData.questionnaire,
+      .from('questionnaires')
+      .insert({
+        project_id: projectId,
+        questionnaire_json: questionnaireJson,
+        status: 'draft'
       })
-      .eq('id', projectId)
-      .eq('user_id', user.id)
       .select()
       .single();
 
     if (error) throw error;
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error updating project:', error);
+    console.error('Error creating questionnaire:', error);
     return NextResponse.json(
-      { error: 'Failed to update project' },
+      { error: 'Failed to create questionnaire' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader) {
+      return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const { projectId, questionnaireJson } = await request.json();
+
+    const supabaseWithAuth = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+
+    const { data: { user }, error: userError } = await supabaseWithAuth.auth.getUser();
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    const { data, error } = await supabaseWithAuth
+      .from('questionnaires')
+      .update({
+        questionnaire_json: questionnaireJson,
+        updated_at: new Date().toISOString()
+      })
+      .eq('project_id', projectId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Error updating questionnaire:', error);
+    return NextResponse.json(
+      { error: 'Failed to update questionnaire' },
       { status: 500 }
     );
   }

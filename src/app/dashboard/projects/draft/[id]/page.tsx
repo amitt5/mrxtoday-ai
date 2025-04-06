@@ -12,15 +12,26 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabaseClient"
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 // import OpenAI from "openai";
+
+interface Questionnaire {
+  id: string;
+  project_id: string;
+  questionnaire_json: any;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export default function ProjectEditDraftPage() {
   const params = useParams()
   const projectId = params.id
   const router = useRouter()
   const { toast } = useToast()
+  const supabase = createClientComponentClient()
 
-  const questionnaire = [
+  const defaultQuestionnaire = [
     {
       id: 1,
       type: "multiple_choice",
@@ -53,13 +64,16 @@ export default function ProjectEditDraftPage() {
       question: "What other brands do you consider when purchasing this type of product?",
     },
   ]
-  
+
+  const [questionnaire1, setQuestionnaire1] = useState(defaultQuestionnaire)
+  const [questionnaireText, setQuestionnaireText] = useState('')
+  const [questionnaireJson, setQuestionnaireJson] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [projectName, setProjectName] = useState("")
   const [totalRespondents, setTotalRespondents] = useState("")
-  const [activeTab, setActiveTab] = useState("text")
+  const [activeTab, setActiveTab] = useState("json")
 
   // Add states for other fields
   const [minAge, setMinAge] = useState("18")
@@ -74,6 +88,10 @@ export default function ProjectEditDraftPage() {
   const [maxAso30Quota, setMaxAso30Quota] = useState("")
   const [projectType, setProjectType] = useState("consumer")
 
+  const [dbQuestionnaire, setDbQuestionnaire] = useState<Questionnaire | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   useEffect(() => {
     async function fetchProjectDetails() {
       if (projectId === 'new') return;
@@ -81,6 +99,7 @@ export default function ProjectEditDraftPage() {
       setIsLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log("session122222", session)
         if (!session) {
           toast({
             title: "Authentication error",
@@ -132,10 +151,75 @@ export default function ProjectEditDraftPage() {
     fetchProjectDetails();
   }, [projectId, toast]);
 
+  useEffect(() => {
+    fetchQuestionnaire();
+  }, [params.id]);
+
+  const fetchQuestionnaire = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('No authenticated session');
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`/api/questionnaires?projectId=${params.id}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch questionnaire');
+      }
+
+      const data = await response.json();
+      if (data) {
+        setDbQuestionnaire(data);
+        // If we have questionnaire data, update the questionnaireJson state
+        setQuestionnaireJson(data.questionnaire_json);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleTestQuestionnaire = async () => {
-    console.log("Test questionnaire")
+    console.log("Test questionnaire", isValidJSON(questionnaireJson))
+    if (!isValidJSON(questionnaireJson)) {
+      toast({
+        title: "Invalid questionnaire",
+        description: "Please enter a valid questionnaire",
+        variant: "destructive",
+      })
+      return
+    }
     // TODO: Implement the logic to test the questionnaire
+
+    // at page load I need to get the questionnaire from the database from the questionnaires table. it should use the class in api/questionnaires/route.ts
+    // questionnaires table has following fields:
+    // id
+    // project_id
+    // questionnaire_json
+    // status
+    // created_at
+    // updated_at
+    // when I save the questionnaire I need to update the questionnaire_json field
+    //  if questionnaire dosent exist, it should create a new one otherwise it should be a PATCH request
   }
+
+  const isValidJSON = (str: string) => {
+    try {
+      JSON.parse(str);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  
 
   const handleGenerate = async () => {
     if (!projectName) {
@@ -184,6 +268,10 @@ export default function ProjectEditDraftPage() {
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const setQuestionnaire = (questionnaire: any) => {
+    console.log("questionnaire", questionnaire)
   }
 
   
@@ -258,12 +346,60 @@ export default function ProjectEditDraftPage() {
     }
   };
 
+  const saveQuestionnaire = async (questionnaireJson: any) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No authenticated session');
+      }
+
+      const method = dbQuestionnaire ? 'PATCH' : 'POST';
+      const response = await fetch('/api/questionnaires', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          projectId: params.id,
+          questionnaireJson
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save questionnaire');
+      }
+
+      const data = await response.json();
+      setDbQuestionnaire(data);
+      toast({
+        title: "Success",
+        description: "Questionnaire saved successfully",
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while saving');
+      toast({
+        title: "Error",
+        description: "Failed to save questionnaire",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
+  }
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
   }
 
   return (
@@ -317,7 +453,7 @@ export default function ProjectEditDraftPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            {/* <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="min-age">Minimum Age</Label>
                 <Input
@@ -341,9 +477,9 @@ export default function ProjectEditDraftPage() {
                   onChange={(e) => setMaxAge(e.target.value)}
                 />
               </div>
-            </div>
+            </div> */}
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label className="text-base font-medium">Gender Quota</Label>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -399,9 +535,9 @@ export default function ProjectEditDraftPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label className="text-base font-medium">Age Quota</Label>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
@@ -457,7 +593,7 @@ export default function ProjectEditDraftPage() {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
 
@@ -471,14 +607,24 @@ export default function ProjectEditDraftPage() {
               <TabsList className="mb-4 bg-secondary">
                 <TabsTrigger value="text">Enter Text</TabsTrigger>
                 <TabsTrigger value="upload">Upload Document</TabsTrigger>
+                <TabsTrigger value="json">Enter JSON</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="json" className="space-y-4">
+                <Textarea
+                  placeholder="Enter your questionnaire JSON text here..."
+                  className="min-h-[300px]"
+                  value={questionnaireJson}
+                  onChange={(e) => setQuestionnaireJson(e.target.value)}
+                />
+              </TabsContent>
 
               <TabsContent value="text" className="space-y-4">
                 <Textarea
                   placeholder="Enter your questionnaire text here..."
                   className="min-h-[300px]"
-                  value={questionnaire}
-                  onChange={(e) => setQuestionnaire(e.target.value)}
+                  value={questionnaireText}
+                  onChange={(e) => setQuestionnaireText(e.target.value)}
                 />
               </TabsContent>
 
@@ -519,7 +665,7 @@ export default function ProjectEditDraftPage() {
             )}
           </Button>
           <Button
-            onClick={handleSaveProject}
+            onClick={() => saveQuestionnaire(questionnaireJson)}
             disabled={isGenerating || isSaving}
             className="bg-primary hover:bg-primary/90"
           >

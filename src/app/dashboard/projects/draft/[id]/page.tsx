@@ -174,6 +174,7 @@ export default function ProjectEditDraftPage() {
 
       const data = await response.json();
       setQuestionnaire(data);
+      setQuestionnaireJson(data.questionnaire_json);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -191,19 +192,6 @@ export default function ProjectEditDraftPage() {
       })
       return
     }
-    // TODO: Implement the logic to test the questionnaire
-
-    // at page load I need to get the questionnaire from the database from the questionnaires table. it should use the class in api/questionnaires/route.ts
-    // questionnaires table has following fields:
-    // id
-    // project_id
-    // questionnaire_json
-    // status
-    // created_at
-    // updated_at
-    // when I save the questionnaire I need to update the questionnaire_json field
-    //  if questionnaire dosent exist, it should create a new one otherwise it should be a PATCH request
-
     saveQuestionnaire(questionnaireJson);
   }
 

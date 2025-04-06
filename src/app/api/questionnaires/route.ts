@@ -1,18 +1,23 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { projectId: string } }
-) {
+
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get('projectId');
+
+    if (!projectId) {
+      return NextResponse.json({ error: 'No projectId in query' }, { status: 400 });
+    }
+
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) {
       return NextResponse.json({ error: 'No authorization header' }, { status: 401 });
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { projectId } = await params;
+    console.log("authHeader11", authHeader, token, projectId);
 
     const supabaseWithAuth = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,14 +51,12 @@ export async function GET(
     }
 
     return NextResponse.json(data);
-  } catch (error) {
-    console.error('Error fetching questionnaire:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch questionnaire' },
-      { status: 500 }
-    );
+  } catch (err) {
+    console.error('Error fetching questionnaire:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
 
 export async function POST(request: Request) {
   try {

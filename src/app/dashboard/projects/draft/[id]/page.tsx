@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/lib/supabaseClient"
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+// import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 // import OpenAI from "openai";
 
 interface Questionnaire {
@@ -29,9 +29,9 @@ export default function ProjectEditDraftPage() {
   const projectId = params.id
   const router = useRouter()
   const { toast } = useToast()
-  const supabase = createClientComponentClient()
+  // const supabase = createClientComponentClient()
 
-  const defaultQuestionnaire = [
+  const questionnaire1 = [
     {
       id: 1,
       type: "multiple_choice",
@@ -65,7 +65,6 @@ export default function ProjectEditDraftPage() {
     },
   ]
 
-  const [questionnaire1, setQuestionnaire1] = useState(defaultQuestionnaire)
   const [questionnaireText, setQuestionnaireText] = useState('')
   const [questionnaireJson, setQuestionnaireJson] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -88,7 +87,7 @@ export default function ProjectEditDraftPage() {
   const [maxAso30Quota, setMaxAso30Quota] = useState("")
   const [projectType, setProjectType] = useState("consumer")
 
-  const [dbQuestionnaire, setDbQuestionnaire] = useState<Questionnaire | null>(null)
+  const [questionnaire, setQuestionnaire] = useState<Questionnaire | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -99,7 +98,6 @@ export default function ProjectEditDraftPage() {
       setIsLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log("session122222", session)
         if (!session) {
           toast({
             title: "Authentication error",
@@ -114,7 +112,6 @@ export default function ProjectEditDraftPage() {
             'Authorization': `Bearer ${session.access_token}`
           }
         });
-
         if (!response.ok) {
           throw new Error('Failed to fetch project details');
         }
@@ -153,7 +150,7 @@ export default function ProjectEditDraftPage() {
 
   useEffect(() => {
     fetchQuestionnaire();
-  }, [params.id]);
+  }, [projectId]);
 
   const fetchQuestionnaire = async () => {
     try {
@@ -163,23 +160,20 @@ export default function ProjectEditDraftPage() {
         setLoading(false);
         return;
       }
-
+      console.log("params.id", params.id)
       const response = await fetch(`/api/questionnaires?projectId=${params.id}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
       });
+      console.log("response1212", response)
 
       if (!response.ok) {
-        throw new Error('Failed to fetch questionnaire');
+        // throw new Error('Failed to fetch questionnaire');
       }
 
       const data = await response.json();
-      if (data) {
-        setDbQuestionnaire(data);
-        // If we have questionnaire data, update the questionnaireJson state
-        setQuestionnaireJson(data.questionnaire_json);
-      }
+      setQuestionnaire(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -209,6 +203,8 @@ export default function ProjectEditDraftPage() {
     // updated_at
     // when I save the questionnaire I need to update the questionnaire_json field
     //  if questionnaire dosent exist, it should create a new one otherwise it should be a PATCH request
+
+    saveQuestionnaire(questionnaireJson);
   }
 
   const isValidJSON = (str: string) => {
@@ -270,7 +266,7 @@ export default function ProjectEditDraftPage() {
     }
   }
 
-  const setQuestionnaire = (questionnaire: any) => {
+  const setQuestionnaire12 = (questionnaire: any) => {
     console.log("questionnaire", questionnaire)
   }
 
@@ -353,7 +349,7 @@ export default function ProjectEditDraftPage() {
         throw new Error('No authenticated session');
       }
 
-      const method = dbQuestionnaire ? 'PATCH' : 'POST';
+      const method = questionnaire ? 'PATCH' : 'POST';
       const response = await fetch('/api/questionnaires', {
         method,
         headers: {
@@ -371,18 +367,9 @@ export default function ProjectEditDraftPage() {
       }
 
       const data = await response.json();
-      setDbQuestionnaire(data);
-      toast({
-        title: "Success",
-        description: "Questionnaire saved successfully",
-      });
+      setQuestionnaire(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while saving');
-      toast({
-        title: "Error",
-        description: "Failed to save questionnaire",
-        variant: "destructive",
-      });
     }
   };
 
@@ -665,7 +652,7 @@ export default function ProjectEditDraftPage() {
             )}
           </Button>
           <Button
-            onClick={() => saveQuestionnaire(questionnaireJson)}
+            onClick={() => handleSaveProject}
             disabled={isGenerating || isSaving}
             className="bg-primary hover:bg-primary/90"
           >

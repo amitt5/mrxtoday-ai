@@ -217,7 +217,7 @@ export default function ProjectEditDraftPage() {
   }
   
 
-  const handleGenerate = async () => {
+  const handleGenerateQuestionnaire = async () => {
     if (!projectName) {
       toast({
         title: "Missing project name",
@@ -627,7 +627,7 @@ export default function ProjectEditDraftPage() {
           <Button variant="outline" onClick={() => router.push("/dashboard")}>
             Cancel
           </Button>
-          <Button variant="outline" onClick={handleGenerate} disabled={isGenerating || isSaving}>
+          <Button variant="outline" onClick={handleGenerateQuestionnaire} disabled={isGenerating || isSaving}>
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

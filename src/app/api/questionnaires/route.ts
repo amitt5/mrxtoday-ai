@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { projectId, questionnaireJson } = await request.json();
+    const { projectId, questionnaireJson, questionnaireText } = await request.json();
 
     const supabaseWithAuth = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -90,6 +90,7 @@ export async function POST(request: Request) {
       .insert({
         project_id: projectId,
         questionnaire_json: questionnaireJson,
+        questionnaire_text: questionnaireText,
         status: 'draft'
       })
       .select()
@@ -114,7 +115,7 @@ export async function PATCH(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const { projectId, questionnaireJson } = await request.json();
+    const { projectId, questionnaireJson, questionnaireText } = await request.json();
 
     const supabaseWithAuth = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -137,6 +138,7 @@ export async function PATCH(request: Request) {
       .from('questionnaires')
       .update({
         questionnaire_json: questionnaireJson,
+        questionnaire_text: questionnaireText,
         updated_at: new Date().toISOString()
       })
       .eq('project_id', projectId)

@@ -176,6 +176,7 @@ export default function ProjectEditDraftPage() {
       console.log("data1212", data)
       setQuestionnaire(data);
       setQuestionnaireJson(data?.questionnaire_json);
+      setQuestionnaireText(data?.questionnaire_text);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -195,7 +196,7 @@ export default function ProjectEditDraftPage() {
     }
     
     try {
-      const savedQuestionnaire = await saveQuestionnaire(questionnaireJson);
+      const savedQuestionnaire = await saveQuestionnaire();
       console.log("savedQuestionnaire", savedQuestionnaire)
       router.push(`/interview/${projectId}`);
     } catch (error) {
@@ -226,6 +227,9 @@ export default function ProjectEditDraftPage() {
       })
       return
     }
+
+    const savedQuestionnaire = await saveQuestionnaire();
+    console.log("savedQuestionnaire", savedQuestionnaire)
 
     // if (!questionnaire && activeTab === "text") {
     //   toast({
@@ -336,7 +340,7 @@ export default function ProjectEditDraftPage() {
     }
   };
 
-  const saveQuestionnaire = async (questionnaireJson: any) => {
+  const saveQuestionnaire = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -352,7 +356,8 @@ export default function ProjectEditDraftPage() {
         },
         body: JSON.stringify({
           projectId: params.id,
-          questionnaireJson
+          questionnaireJson,
+          questionnaireText
         })
       });
 
@@ -606,7 +611,7 @@ export default function ProjectEditDraftPage() {
                 <Textarea
                   placeholder="Enter your questionnaire text here..."
                   className="min-h-[300px]"
-                  value={questionnaireText}
+                  value={questionnaireText ?? ""}
                   onChange={(e) => setQuestionnaireText(e.target.value)}
                 />
               </TabsContent>

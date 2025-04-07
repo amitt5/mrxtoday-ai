@@ -104,9 +104,9 @@ export default function InterviewPage() {
           throw new Error('Failed to fetch questionnaire');
         }
 
-        const data: Questionnaire = await response.json();
+        const data = await response.json();
         if (data?.questionnaire_json) {
-          setQuestionnaire(data.questionnaire_json);
+          setQuestionnaire(JSON.parse(data.questionnaire_json));
         }
       } catch (error) {
         console.error('Error fetching questionnaire:', error);

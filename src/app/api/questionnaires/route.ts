@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    console.log("authHeader11", authHeader, token, projectId);
+    console.log("authHeader11", projectId);
 
     const supabaseWithAuth = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

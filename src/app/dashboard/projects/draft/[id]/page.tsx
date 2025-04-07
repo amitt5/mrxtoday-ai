@@ -169,12 +169,13 @@ export default function ProjectEditDraftPage() {
       console.log("response1212", response)
 
       if (!response.ok) {
-        // throw new Error('Failed to fetch questionnaire');
+        throw new Error('Failed to fetch questionnaire');
       }
 
       const data = await response.json();
+      console.log("data1212", data)
       setQuestionnaire(data);
-      setQuestionnaireJson(data.questionnaire_json);
+      setQuestionnaireJson(data?.questionnaire_json);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -192,7 +193,18 @@ export default function ProjectEditDraftPage() {
       })
       return
     }
-    saveQuestionnaire(questionnaireJson);
+    
+    try {
+      const savedQuestionnaire = await saveQuestionnaire(questionnaireJson);
+      console.log("savedQuestionnaire", savedQuestionnaire)
+      router.push(`/interview/${projectId}`);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save questionnaire",
+        variant: "destructive",
+      });
+    }
   }
 
   const isValidJSON = (str: string) => {
@@ -252,13 +264,7 @@ export default function ProjectEditDraftPage() {
     } finally {
       setIsGenerating(false)
     }
-  }
-
-  const setQuestionnaire12 = (questionnaire: any) => {
-    console.log("questionnaire", questionnaire)
-  }
-
-  
+  }  
 
   const handleSaveProject = async () => {
     if (!projectName) {
@@ -356,8 +362,10 @@ export default function ProjectEditDraftPage() {
 
       const data = await response.json();
       setQuestionnaire(data);
+      return data; // Return the saved questionnaire data
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred while saving');
+      throw err; // Re-throw the error to be handled by the caller
     }
   };
 
